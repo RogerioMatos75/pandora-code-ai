@@ -1,0 +1,120 @@
+{
+  "name": "pandora-code-ai",
+  "displayName": "Pandora Code AI",
+  "description": "Assistente de programação usando DeepSeek para ajudar iniciantes",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0",
+    "node": ">=16.0.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Education"
+  ],
+  "activationEvents": [
+    "onCommand:pandora-code-ai.explainCode",
+    "onCommand:pandora-code-ai.suggestImprovements",
+    "onCommand:pandora-code-ai.checkSecurity"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "pandora-code-ai.analyzeSecurity",
+        "title": "Analisar Segurança do Código",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.generateCode",
+        "title": "Gerar Código",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.explainCode",
+        "title": "Explicar Código",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.showMetrics",
+        "title": "Mostrar Métricas de Uso",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.analyzeCode",
+        "title": "Analisar Código Completo",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.exportMetrics",
+        "title": "Exportar Métricas",
+        "category": "Pandora Code AI"
+      }
+    ],
+    "configuration": {
+      "title": "Pandora Code AI",
+      "properties": {
+        "pandoraAI.modelPath": {
+          "type": "string",
+          "default": "deepseek-coder-6.7b-instruct",
+          "description": "Caminho para o modelo DeepSeek"
+        },
+        "pandoraAI.port": {
+          "type": "number",
+          "default": 8080,
+          "description": "Porta para comunicação com o modelo DeepSeek"
+        }
+      }
+    },
+    "iconThemes": [
+      {
+        "id": "pandora-icons",
+        "label": "Pandora Code AI Icons",
+        "path": "./icons/pandora-icon-theme.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "test-compile": "tsc -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "test:unit": "jest --config jest.config.js",
+    "test:coverage": "jest --coverage --config jest.config.js",
+    "prepare": "node -e \"if(process.env.NODE_ENV!=='production'){process.exit(1)}\" || husky install",
+    "postinstall": "husky install"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/test/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/test/**"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^16.0.0",
+    "@types/vscode": "^1.80.0",
+    "ts-loader": "^9.4.0",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "husky": "^8.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "@types/ws": "^8.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.0.0",
+    "ws": "^8.0.0"
+  }
+}
