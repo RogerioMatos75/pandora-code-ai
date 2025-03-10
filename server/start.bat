@@ -1,0 +1,26 @@
+@echo off
+cd /d %~dp0
+echo Ativando ambiente virtual...
+call ..\venv\Scripts\activate
+
+echo Instalando dependencias basicas...
+python -m pip install --upgrade pip wheel setuptools
+
+echo Instalando FastAPI e Uvicorn...
+python -m pip install fastapi "uvicorn[standard]" --no-cache-dir
+
+echo Instalando outras dependencias...
+python -m pip install pydantic aiohttp --no-cache-dir
+
+echo Instalando PyTorch...
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
+
+echo Instalando Transformers...
+python -m pip install transformers --no-cache-dir
+
+echo Verificando instalacao...
+python -c "import uvicorn; import fastapi; import torch; print('Dependencias instaladas com sucesso!')"
+
+echo Iniciando servidor...
+python run_server.py
+pause

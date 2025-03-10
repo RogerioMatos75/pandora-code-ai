@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PandoraCodeAI - Análise de Código</title>
+    <style>
+        body { max-width: 800px; margin: 0 auto; padding: 20px; }
+        textarea { width: 100%; height: 200px; }
+        #result { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>PandoraCodeAI - Análise de Código</h1>
+    <textarea id="code" placeholder="Cole seu código Python aqui..."></textarea>
+    <button onclick="analyzeCode()">Analisar</button>
+    <div id="result"></div>
+
+    <script>
+        async function analyzeCode() {
+            const code = document.getElementById('code').value;
+            const result = document.getElementById('result');
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                result.textContent = data.analysis;
+            } catch (error) {
+                result.textContent = 'Erro: ' + error;
+            }
+        }
+    </script>
+</body>
+</html>
