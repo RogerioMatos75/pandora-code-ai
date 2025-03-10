@@ -1,61 +1,81 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import uvicorn
+import asyncio
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 
-app = FastAPI()
+app = FastAPI(title="Pandora Code AI Server")
 
+# Modelos Pydantic para requests/responses
 class CodeRequest(BaseModel):
     code: str
-    position: int
+    language: Optional[str] = None
+    context: Optional[str] = None
 
 class CodeResponse(BaseModel):
-    suggestions: List[str]
+    text: str
+    suggestions: List[str] = []
+    errors: List[str] = []
 
-class SecurityResponse(BaseModel):
-    vulnerabilities: List[dict]
+class ModelStatus(BaseModel):
+    is_loaded: bool
+    device: str
+    model_name: str
+    memory_usage: float
 
-class ExplanationResponse(BaseModel):
-    explanation: str
+# Variáveis globais para o modelo
+model = None
+tokenizer = None
+model_status = {"is_loaded": False}
 
-# Carregar modelo DeepSeek
-model_path = "deepseek-ai/deepseek-coder-6.7b-instruct"
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForCausalLM.from_pretrained(model_path)
-
-@app.post("/suggest", response_model=CodeResponse)
-async def suggest_code(request: CodeRequest):
+@app.on_event("startup")
+async def startup_event():
+    """Inicializa o modelo durante a inicialização do servidor"""
     try:
-        # TODO: Implementar integração com DeepSeek Code
-        return CodeResponse(suggestions=["Sugestão 1", "Sugestão 2"])
+        await initialize_model()
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Erro ao inicializar modelo: {str(e)}")
 
-@app.post("/security", response_model=SecurityResponse)
-async def check_security(request: CodeRequest):
+async def initialize_model():
+    """Carrega o modelo DeepSeek"""
+    global model, tokenizer, model_status
+    
+    model_name = "deepseek-ai/deepseek-coder-6.7b-instruct"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    
     try:
-        # TODO: Implementar análise de segurança
-        return SecurityResponse(vulnerabilities=[
-            {"tipo": "SQL Injection", "linha": 10, "severidade": "Alta"},
-        ])
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name,
+            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
+            device_map="auto"
+        )
+        
+        model_status = {
+            "is_loaded": True,
+            "device": device,
+            "model_name": model_name,
+            "memory_usage": torch.cuda.memory_allocated() if device == "cuda" else 0
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        model_status["is_loaded"] = False
+        raise HTTPException(status_code=500, detail=f"Erro ao carregar modelo: {str(e)}")
 
-@app.post("/explain", response_model=ExplanationResponse)
-async def explain_code(request: CodeRequest):
-    try:
-        # TODO: Implementar explicação de código
-        return ExplanationResponse(explanation="Explicação do código aqui")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@app.get("/status")
+async def get_status() -> ModelStatus:
+    """Retorna o status atual do modelo"""
+    return ModelStatus(**model_status)
 
-@app.post('/generate')
-async def generate(request: CodeRequest):
+@app.post("/generate")
+async def generate_code(request: CodeRequest) -> CodeResponse:
+    """Gera código baseado no prompt"""
+    if not model_status["is_loaded"]:
+        raise HTTPException(status_code=503, detail="Modelo não está carregado")
+    
     try:
-        prompt = request.code
-        inputs = tokenizer(prompt, return_tensors="pt", max_length=512, truncation=True)
+        inputs = tokenizer(request.code, return_tensors="pt").to(model.device)
         
         with torch.no_grad():
             outputs = model.generate(
@@ -63,13 +83,56 @@ async def generate(request: CodeRequest):
                 max_length=2048,
                 num_return_sequences=1,
                 temperature=0.7,
-                top_p=0.95
+                do_sample=True
             )
         
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return {"text": response}
+        generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        
+        return CodeResponse(
+            text=generated_text,
+            suggestions=[]
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/analyze")
+async def analyze_code(request: CodeRequest) -> CodeResponse:
+    """Analisa código e retorna sugestões"""
+    if not model_status["is_loaded"]:
+        raise HTTPException(status_code=503, detail="Modelo não está carregado")
+    
+    try:
+        prompt = f"""
+        Analise este código e forneça sugestões de melhoria:
+        ```{request.language or ''}
+        {request.code}
+        ```
+        """
+        
+        inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+        
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_length=1024,
+                num_return_sequences=1,
+                temperature=0.3
+            )
+        
+        analysis = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        
+        return CodeResponse(
+            text=analysis,
+            suggestions=[s.strip() for s in analysis.split('\n') if s.strip()]
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=11434,
+        reload=True,
+        log_level="info"
+    )

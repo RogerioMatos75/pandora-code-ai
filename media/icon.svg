@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="24" height="24" viewBox="0 0 24 24" version="1.1"
+    xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+    <circle cx="12" cy="12" r="4" fill="currentColor"/>
+    <path d="M12 7V4" stroke="currentColor" stroke-width="2"/>
+    <path d="M17 12h3" stroke="currentColor" stroke-width="2"/>
+    <path d="M12 20v-3" stroke="currentColor" stroke-width="2"/>
+    <path d="M4 12h3" stroke="currentColor" stroke-width="2"/>
+</svg>

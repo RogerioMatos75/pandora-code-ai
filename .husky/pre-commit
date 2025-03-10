@@ -1,4 +1,7 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
-npm run test:unit
+exec < /dev/tty
+
+echo "Executando pré-commit hooks..."
+npx.cmd --no-install lint-staged
