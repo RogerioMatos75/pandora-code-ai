@@ -120,7 +120,8 @@
     "test:coverage": "jest --coverage --config jest.config.js",
     "prepare": "node -e \"if(process.env.NODE_ENV!=='production'){process.exit(0)}\" || husky install",
     "pre-commit": "lint-staged || exit 0",
-    "postinstall": "husky install"
+    "postinstall": "husky install && node scripts/check-security.js",
+    "setup-security": "powershell -File scripts/setup-security.ps1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
