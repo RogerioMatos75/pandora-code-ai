@@ -5,8 +5,21 @@ import uvicorn
 import asyncio
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Pandora Code AI Server")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        await initialize_model()
+        yield
+    finally:
+        # Cleanup, if needed
+        pass
+
+app = FastAPI(
+    title="Pandora Code AI Server",
+    lifespan=lifespan
+)
 
 # Modelos Pydantic para requests/responses
 class CodeRequest(BaseModel):
@@ -30,34 +43,38 @@ model = None
 tokenizer = None
 model_status = {"is_loaded": False}
 
-@app.on_event("startup")
-async def startup_event():
-    """Inicializa o modelo durante a inicialização do servidor"""
-    try:
-        await initialize_model()
-    except Exception as e:
-        print(f"Erro ao inicializar modelo: {str(e)}")
+# Remover ou comentar o antigo @app.on_event("startup")
+# @app.on_event("startup")
+# async def startup_event():
+#     """Inicializa o modelo durante a inicialização do servidor"""
+#     try:
+#         await initialize_model()
+#     except Exception as e:
+#         print(f"Erro ao inicializar modelo: {str(e)}")
 
 async def initialize_model():
     """Carrega o modelo DeepSeek"""
     global model, tokenizer, model_status
     
-    model_name = "deepseek-ai/deepseek-coder-6.7b-instruct"
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # Usando modelo menor e mais eficiente
+    model_name = "microsoft/CodeGPT-small-py"  # ~500MB
+    device = "cpu"
     
     try:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
-            torch_dtype=torch.float16 if device == "cuda" else torch.float32,
-            device_map="auto"
+            torch_dtype=torch.float32,
+            quantization_config={"load_in_8bit": True},  # Reduz uso de memória
+            low_cpu_mem_usage=True
         )
+        model = model.to(device)
         
         model_status = {
             "is_loaded": True,
             "device": device,
             "model_name": model_name,
-            "memory_usage": torch.cuda.memory_allocated() if device == "cuda" else 0
+            "memory_usage": 0  # Não podemos medir na CPU
         }
     except Exception as e:
         model_status["is_loaded"] = False

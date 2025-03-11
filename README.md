@@ -1,6 +1,6 @@
 # Pandora Code AI
 
-Extensão VSCode que utiliza DeepSeek localmente para auxiliar programadores iniciantes.
+Extensão VSCode que utiliza IA para auxiliar programadores iniciantes.
 
 ## ✨ Destaques do Projeto
 
@@ -12,9 +12,9 @@ Extensão VSCode que utiliza DeepSeek localmente para auxiliar programadores ini
 
 ### 🤖 Integração IA
 
-- Uso do DeepSeek localmente
+- Uso do Microsoft CodeGPT-small-py
 - Análises em tempo real
-- Baixa latência nas respostas
+- Otimizado para performance
 
 ### 📊 Métricas e Análises
 
@@ -34,7 +34,7 @@ Extensão VSCode que utiliza DeepSeek localmente para auxiliar programadores ini
 
 - TypeScript/Node.js para a extensão
 - Python/FastAPI para o servidor
-- DeepSeek para IA local
+- Microsoft CodeGPT para IA local
 - Jest para testes
 
 ## 📋 Feedback Necessário
@@ -184,30 +184,54 @@ curl -X POST http://localhost:11434/api/generate \
 
 ## 🔒 Configuração de Segurança
 
-### Windows
+1. **Arquivo de Configuração**
 
-Execute o script de configuração de segurança como administrador:
+   ```bash
+   # Copiar arquivo de exemplo
+   cp server/config/settings.example.json server/config/settings.json
 
-```powershell
-# No PowerShell como administrador
-.\scripts\setup-security.ps1
-```
+   # Editar configurações
+   nano server/config/settings.json
+   ```
 
-Ou configure manualmente:
+2. **Variáveis de Ambiente**
 
-```powershell
-Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-$acl = Get-Acl ".husky\pre-commit"
-$accessRule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users","FullControl","Allow")
-$acl.SetAccessRule($accessRule)
-Set-Acl ".husky\pre-commit" $acl
-```
+   ```bash
+   # Criar arquivo .env na raiz
+   echo "CONFIG_PATH=./server/config/settings.json" > .env
+   ```
 
-### Linux/Mac
+3. **Chaves de API**
+   - Nunca commite o arquivo `settings.json`
+   - Mantenha suas chaves de API seguras
+   - Use o arquivo `.env` para configurações locais
 
-```bash
-chmod +x .husky/pre-commit
-```
+## 🚀 Iniciando o Projeto
+
+1. **Preparar Ambiente**
+
+   ```bash
+   # Instalar dependências Node
+   npm install
+
+   # Configurar ambiente Python
+   python -m venv venv
+   .\venv\Scripts\activate  # Windows
+   source venv/bin/activate # Linux/Mac
+   ```
+
+2. **Iniciar Servidor**
+
+   ```bash
+   # Na raiz do projeto
+   .\start-server.bat  # Windows
+   ./start-server.sh   # Linux/Mac
+   ```
+
+3. **Compilar Extensão**
+   ```bash
+   npm run compile
+   ```
 
 ## 📬 Como Contribuir
 

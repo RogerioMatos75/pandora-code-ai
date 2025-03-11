@@ -11,11 +11,6 @@
     "Programming Languages",
     "Education"
   ],
-  "activationEvents": [
-    "onCommand:pandora-code-ai.explainCode",
-    "onCommand:pandora-code-ai.suggestImprovements",
-    "onCommand:pandora-code-ai.checkSecurity"
-  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -118,10 +113,10 @@
     "test": "node ./out/test/runTest.js",
     "test:unit": "jest --config jest.config.js",
     "test:coverage": "jest --coverage --config jest.config.js",
-    "prepare": "node -e \"if(process.env.NODE_ENV!=='production'){process.exit(0)}\" || husky install",
+    "prepare": "husky install && husky add .husky/pre-commit \"npx.cmd --no-install lint-staged\"",
     "pre-commit": "lint-staged || exit 0",
-    "postinstall": "husky install && node scripts/check-security.js",
-    "setup-security": "powershell -File scripts/setup-security.ps1"
+    "postinstall": "npm run prepare",
+    "setup-security": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-security.ps1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

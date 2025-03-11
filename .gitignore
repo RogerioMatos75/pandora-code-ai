@@ -9,3 +9,12 @@ coverage/
 venv/
 __pycache__/
 *.pyc
+
+# Arquivos de configuração com dados sensíveis
+server/config/settings.json
+.env
+
+# Chaves e tokens
+*.pem
+*.key
+*.secret

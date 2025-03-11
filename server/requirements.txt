@@ -1,11 +1,9 @@
 fastapi
 uvicorn
 pydantic
-google-generativeai
 python-dotenv
-transformers[torch]
-torch
-aiohttp
-requests
-psutil
-sentencepiece
+transformers>=4.36.0
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.1.0+cpu
+accelerate>=0.26.0
+bitsandbytes>=0.41.0  # Para quantização
