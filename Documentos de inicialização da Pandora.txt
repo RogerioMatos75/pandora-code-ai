@@ -1,9 +1,17 @@
 Amanhã para retomar:
 
-cd PandoraCodeAI
+# cd PandoraCodeAI
 code . para abrir o VS Code
+.\start-server.bat
 .\venv\Scripts\activate para ativar o ambiente virtual
 cd server && python app.py para iniciar o servidor
+
+Agora você pode executar de qualquer uma dessas formas:
+
+No PowerShell: .\start-server.bat
+No CMD: start-server.bat
+Clicando duas vezes no arquivo no Explorer
+(Press CTRL+C to quit)
 
 # Remover configuração atual do Husky
 Remove-Item -Recurse -Force .husky
