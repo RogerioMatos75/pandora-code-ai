@@ -1,9 +1,4 @@
-fastapi
-uvicorn
-pydantic
-python-dotenv
-transformers>=4.36.0
---extra-index-url https://download.pytorch.org/whl/cpu
-torch>=2.1.0+cpu
-accelerate>=0.26.0
-bitsandbytes>=0.41.0  # Para quantização
+flask==3.0.2
+flask_cors==4.0.0
+google-generativeai==0.3.2
+python-dotenv==1.0.1
