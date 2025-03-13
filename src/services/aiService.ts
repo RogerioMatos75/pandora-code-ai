@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import axios from "axios";
 import {
   CodeSuggestion,
   SecurityIssue,
@@ -6,22 +7,19 @@ import {
   SecurityVulnerability,
   CodeGeneration,
 } from "../types/AITypes";
-import { DeepSeekService } from "./deepseekService";
 import { ResponseParser } from "../utils/responseParser";
 
 export class AIService {
-  private deepseek: DeepSeekService;
   private maxRetries = 3;
 
   constructor() {
-    this.deepseek = new DeepSeekService();
     this.initialize();
   }
 
   private async initialize() {
     for (let i = 0; i < this.maxRetries; i++) {
       try {
-        await this.deepseek.initialize();
+        // Inicialização via servidor Flask; não usamos DeepSeekService
         return;
       } catch (error) {
         if (i === this.maxRetries - 1) {
@@ -34,17 +32,12 @@ export class AIService {
     }
   }
 
-  // Adicionar método para expor o DeepSeekService
-  getDeepSeekService(): DeepSeekService {
-    return this.deepseek;
-  }
-
   async getSuggestions(
     document: vscode.TextDocument,
     position: vscode.Position
   ): Promise<CodeSuggestion[]> {
     try {
-      const response = await this.deepseek.generate(`
+      const prompt = `
                 Analise este código e sugira melhorias:
                 ${document.getText()}
                 
@@ -52,9 +45,11 @@ export class AIService {
                 Formato da resposta:
                 - Sugestão: (sua sugestão aqui)
                 - Explicação: (explicação simples aqui)
-            `);
-
-      return this.parseResponse(response);
+            `;
+      const axiosResponse = await axios.post("http://localhost:5000/analyze", {
+        code: document.getText(),
+      });
+      return this.parseResponse(axiosResponse.data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui gerar sugestões. Tente novamente."
@@ -70,10 +65,12 @@ export class AIService {
                 que está começando a programar:
                 ${code}
             `;
-
-      // Implementar chamada local ao DeepSeek
+      const axiosResponse = await axios.post("http://localhost:5000/explain", {
+        code,
+      });
+      // Assume que o servidor retorna uma propriedade 'explanation'
       return {
-        simpleExplanation: "",
+        simpleExplanation: axiosResponse.data.explanation,
         examples: [],
       };
     } catch (error) {
@@ -86,14 +83,10 @@ export class AIService {
 
   async checkSecurity(code: string): Promise<SecurityIssue[]> {
     try {
-      const prompt = `
-                Analise este código e identifique possíveis problemas de segurança.
-                Explique os problemas de forma simples:
-                ${code}
-            `;
-
-      // Implementar chamada local ao DeepSeek
-      return [];
+      const axiosResponse = await axios.post("http://localhost:5000/security", {
+        code,
+      });
+      return axiosResponse.data.vulnerabilities;
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui verificar a segurança. Tente novamente."
@@ -118,9 +111,10 @@ export class AIService {
                 Código para análise:
                 ${code}
             `;
-
-      const response = await this.deepseek.generate(prompt);
-      return this.parseSecurityAnalysis(response);
+      const axiosResponse = await axios.post("http://localhost:5000/analyze", {
+        code,
+      });
+      return this.parseSecurityAnalysis(axiosResponse.data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage("Falha na análise de segurança");
       return [];
@@ -141,21 +135,48 @@ export class AIService {
                 2. Explicação do código
                 3. Exemplos de uso
             `;
-
-      const response = await this.deepseek.generate(prompt);
-      return this.parseCodeGeneration(response);
+      const axiosResponse = await axios.post("http://localhost:5000/generate", {
+        description,
+        language,
+      });
+      return this.parseCodeGeneration(axiosResponse.data);
     } catch (error) {
       vscode.window.showErrorMessage("Falha na geração de código");
       return { code: "", explanation: "", examples: [] };
     }
   }
 
-  // Corrigir parsers não implementados
   private parseSecurityAnalysis(response: string): SecurityVulnerability[] {
     return ResponseParser.parseSecurityAnalysis(response);
   }
 
   private parseCodeGeneration(response: string): CodeGeneration {
     return ResponseParser.parseCodeGeneration(response);
+  }
+
+  private parseResponse(response: string): CodeSuggestion[] {
+    const suggestions: CodeSuggestion[] = [];
+    const lines = response
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line);
+    let currentSuggestion = "";
+    let currentExplanation = "";
+    for (const line of lines) {
+      if (line.startsWith("- Sugestão:")) {
+        currentSuggestion = line.replace("- Sugestão:", "").trim();
+      } else if (line.startsWith("- Explicação:")) {
+        currentExplanation = line.replace("- Explicação:", "").trim();
+        if (currentSuggestion) {
+          suggestions.push({
+            suggestion: currentSuggestion,
+            explanation: currentExplanation,
+          });
+          currentSuggestion = "";
+          currentExplanation = "";
+        }
+      }
+    }
+    return suggestions;
   }
 }

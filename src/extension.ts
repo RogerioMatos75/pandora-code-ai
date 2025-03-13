@@ -122,48 +122,27 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   // Registrar a view do Pandora
-  const pandoraView = vscode.window.createWebviewViewProvider(
-    "pandora-ai.mainView",
-    {
-      webviewOptions: { retainContextWhenHidden: true },
+  const pandoraViewProvider = {
+    resolveWebviewView(
+      webviewView: vscode.WebviewView,
+      context: vscode.WebviewViewResolveContext,
+      token: vscode.CancellationToken
+    ) {
+      webviewView.webview.html = PandoraPanel.getWebviewContent();
+      // Atualizar status inicial – agora usando o servidor Flask
+      webviewView.webview.postMessage({
+        type: "status",
+        status: "connected",
+        message: "Servidor conectado",
+      });
+      // Removida a chamada à inicialização do DeepSeekService
     },
-    {
-      resolveWebviewView(webviewView) {
-        webviewView.webview.html = PandoraPanel.getWebviewContent();
-
-        // Atualizar status inicial
-        webviewView.webview.postMessage({
-          type: "status",
-          status: "connecting",
-          message: "Conectando ao DeepSeek...",
-        });
-
-        // Inicializar modelo
-        aiService
-          .getDeepSeekService()
-          .initialize()
-          .then(() => {
-            webviewView.webview.postMessage({
-              type: "status",
-              status: "connected",
-              message: "DeepSeek conectado",
-            });
-          })
-          .catch((error) => {
-            webviewView.webview.postMessage({
-              type: "status",
-              status: "error",
-              message: "Erro ao conectar: " + error.message,
-            });
-          });
-      },
-    }
-  );
+  };
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
       "pandora-ai.mainView",
-      pandoraView
+      pandoraViewProvider
     )
   );
 

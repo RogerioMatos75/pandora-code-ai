@@ -61,6 +61,25 @@ export class PandoraPanel {
     PandoraPanel.currentPanel = new PandoraPanel(panel, extensionUri);
   }
 
+  // NOVO: método estático para obter o conteúdo do webview
+  public static getWebviewContent(): string {
+    return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pandora Code AI</title>
+  <style>
+    /* ...estilos... */
+  </style>
+</head>
+<body>
+  <h1>Pandora Code AI</h1>
+  <!-- Conteúdo adicional -->
+</body>
+</html>`;
+  }
+
   private _getWebviewContent() {
     return `<!DOCTYPE html>
         <html lang="pt-BR">
