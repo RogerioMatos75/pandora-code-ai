@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import axios from "axios";
+import fetch from "node-fetch";
 import {
   CodeSuggestion,
   SecurityIssue,
@@ -11,6 +11,8 @@ import { ResponseParser } from "../utils/responseParser";
 
 export class AIService {
   private maxRetries = 3;
+  private serverUrl = "http://localhost:5000";
+  private isServerAvailable = false;
 
   constructor() {
     this.initialize();
@@ -19,23 +21,43 @@ export class AIService {
   private async initialize() {
     for (let i = 0; i < this.maxRetries; i++) {
       try {
-        // Inicialização via servidor Flask; não usamos DeepSeekService
-        return;
+        const response = await fetch(`${this.serverUrl}/status`);
+        if (response.ok) {
+          this.isServerAvailable = true;
+          return;
+        }
+        throw new Error(`Servidor indisponível: ${response.status}`);
       } catch (error) {
         if (i === this.maxRetries - 1) {
-          throw new Error(
-            `Falha ao inicializar após ${this.maxRetries} tentativas`
+          vscode.window.showErrorMessage(
+            `Falha ao conectar ao servidor após ${this.maxRetries} tentativas. Verifique se o servidor está rodando.`
           );
+          throw new Error(`Falha na inicialização: ${error}`);
         }
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000 * (i + 1))); // Backoff exponencial
       }
     }
+  }
+
+  private async ensureServerAvailable(): Promise<boolean> {
+    if (!this.isServerAvailable) {
+      try {
+        await this.initialize();
+      } catch {
+        return false;
+      }
+    }
+    return true;
   }
 
   async getSuggestions(
     document: vscode.TextDocument,
     position: vscode.Position
   ): Promise<CodeSuggestion[]> {
+    if (!(await this.ensureServerAvailable())) {
+      vscode.window.showErrorMessage("Servidor indisponível.");
+      return [];
+    }
     try {
       const prompt = `
                 Analise este código e sugira melhorias:
@@ -46,10 +68,17 @@ export class AIService {
                 - Sugestão: (sua sugestão aqui)
                 - Explicação: (explicação simples aqui)
             `;
-      const axiosResponse = await axios.post("http://localhost:5000/analyze", {
-        code: document.getText(),
+      const response = await fetch(`${this.serverUrl}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: document.getText() }),
       });
-      return this.parseResponse(axiosResponse.data.analysis);
+      if (!response.ok) {
+        vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
+        return [];
+      }
+      const data = await response.json();
+      return this.parseResponse(data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui gerar sugestões. Tente novamente."
@@ -59,20 +88,27 @@ export class AIService {
   }
 
   async explainCode(code: string): Promise<CodeExplanation> {
+    if (!(await this.ensureServerAvailable())) {
+      vscode.window.showErrorMessage("Servidor indisponível.");
+      return { simpleExplanation: "" };
+    }
     try {
       const prompt = `
                 Explique este código de forma simples, como se estivesse explicando para alguém
                 que está começando a programar:
                 ${code}
             `;
-      const axiosResponse = await axios.post("http://localhost:5000/explain", {
-        code,
+      const response = await fetch(`${this.serverUrl}/explain`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
       });
-      // Assume que o servidor retorna uma propriedade 'explanation'
-      return {
-        simpleExplanation: axiosResponse.data.explanation,
-        examples: [],
-      };
+      if (!response.ok) {
+        vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
+        return { simpleExplanation: "" };
+      }
+      const data = await response.json();
+      return { simpleExplanation: data.explanation, examples: [] };
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui explicar o código. Tente novamente."
@@ -82,11 +118,22 @@ export class AIService {
   }
 
   async checkSecurity(code: string): Promise<SecurityIssue[]> {
+    if (!(await this.ensureServerAvailable())) {
+      vscode.window.showErrorMessage("Servidor indisponível.");
+      return [];
+    }
     try {
-      const axiosResponse = await axios.post("http://localhost:5000/security", {
-        code,
+      const response = await fetch(`${this.serverUrl}/security`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
       });
-      return axiosResponse.data.vulnerabilities;
+      if (!response.ok) {
+        vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
+        return [];
+      }
+      const data = await response.json();
+      return data.vulnerabilities;
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui verificar a segurança. Tente novamente."
@@ -98,6 +145,10 @@ export class AIService {
   async analyzeCodeSecurity(
     document: vscode.TextDocument
   ): Promise<SecurityVulnerability[]> {
+    if (!(await this.ensureServerAvailable())) {
+      vscode.window.showErrorMessage("Servidor indisponível.");
+      return [];
+    }
     try {
       const code = document.getText();
       const prompt = `
@@ -111,10 +162,17 @@ export class AIService {
                 Código para análise:
                 ${code}
             `;
-      const axiosResponse = await axios.post("http://localhost:5000/analyze", {
-        code,
+      const response = await fetch(`${this.serverUrl}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
       });
-      return this.parseSecurityAnalysis(axiosResponse.data.analysis);
+      if (!response.ok) {
+        vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
+        return [];
+      }
+      const data = await response.json();
+      return this.parseSecurityAnalysis(data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage("Falha na análise de segurança");
       return [];
@@ -125,6 +183,10 @@ export class AIService {
     description: string,
     language: string
   ): Promise<CodeGeneration> {
+    if (!(await this.ensureServerAvailable())) {
+      vscode.window.showErrorMessage("Servidor indisponível.");
+      return { code: "", explanation: "", examples: [] };
+    }
     try {
       const prompt = `
                 Gere um código em ${language} que atenda a seguinte descrição:
@@ -135,11 +197,17 @@ export class AIService {
                 2. Explicação do código
                 3. Exemplos de uso
             `;
-      const axiosResponse = await axios.post("http://localhost:5000/generate", {
-        description,
-        language,
+      const response = await fetch(`${this.serverUrl}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, language }),
       });
-      return this.parseCodeGeneration(axiosResponse.data);
+      if (!response.ok) {
+        vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
+        return { code: "", explanation: "", examples: [] };
+      }
+      const data = await response.json();
+      return this.parseCodeGeneration(data);
     } catch (error) {
       vscode.window.showErrorMessage("Falha na geração de código");
       return { code: "", explanation: "", examples: [] };

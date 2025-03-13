@@ -1,21 +1,26 @@
 Amanhã para retomar:
 
 # cd PandoraCodeAI
+```
 code . para abrir o VS Code
 .\start-server.bat
 .\venv\Scripts\activate para ativar o ambiente virtual
 cd server && python app.py para iniciar o servidor
+```
 
-Agora você pode executar de qualquer uma dessas formas:
-
+# Agora você pode executar de qualquer uma dessas formas:
+```
 No PowerShell: .\start-server.bat
 No CMD: start-server.bat
 Clicando duas vezes no arquivo no Explorer
 (Press CTRL+C to quit)
+```
 
 # Remover configuração atual do Husky
+```
 Remove-Item -Recurse -Force .husky
 Remove-Item -Recurse -Force .git/hooks
+```
 
 # Reinstalar Husky
 npm uninstall husky
@@ -30,11 +35,11 @@ npx husky add .husky/pre-commit "npx.cmd --no-install lint-staged"
 # Dar permissão de execução (mesmo no Windows)
 icacls .husky\pre-commit /grant Everyone:F
 
-Para usar, basta executar:
+# Para usar, basta executar:
 npm run setup-security
 
 
-Ótimo que o commit funcionou! Agora que resolvemos os problemas de permissão do Husky, podemos continuar com o desenvolvimento. Quer que continuemos implementando alguma das funcionalidades pendentes, como:
+# Ótimo que o commit funcionou! Agora que resolvemos os problemas de permissão do Husky, podemos continuar com o desenvolvimento. Quer que continuemos implementando alguma das funcionalidades pendentes, como:
 
 Server Python (FastAPI)
 

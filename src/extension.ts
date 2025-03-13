@@ -1,17 +1,15 @@
 import * as vscode from "vscode";
+import fetch from "node-fetch";
 import { AIService } from "./services/aiService";
 import { ResultPanel } from "./ui/ResultPanel";
 import { MetricsService } from "./services/metricsService";
-import { CodeAnalysisService } from "./services/codeAnalysisService";
 import { PandoraPanel } from "./ui/PandoraPanel";
 
 export function activate(context: vscode.ExtensionContext) {
   const aiService = new AIService();
   const resultPanel = new ResultPanel(context);
   const metricsService = new MetricsService();
-  const codeAnalysisService = new CodeAnalysisService(
-    aiService.getDeepSeekService()
-  );
+  // Removemos a criação de codeAnalysisService que usava getDeepSeekService()
 
   let disposables = [
     vscode.commands.registerCommand(
@@ -65,6 +63,34 @@ export function activate(context: vscode.ExtensionContext) {
       const explanation = await aiService.explainCode(code);
       // Mostrar resultados
     }),
+
+    // Novo comando para análise de código usando /complete do servidor Flask
+    vscode.commands.registerCommand("pandora-code-ai.analyzeCode", async () => {
+      try {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) return;
+        const code = editor.document.getText();
+        const response = await fetch("http://localhost:5000/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: code }),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          vscode.window.showErrorMessage(
+            `Erro do servidor: ${response.status} - ${errorText}`
+          );
+          return;
+        }
+        const data = await response.json();
+        // Presume que data.result contém a análise do código
+        resultPanel.showCodeAnalysis(data.result);
+      } catch (error: any) {
+        vscode.window.showErrorMessage(
+          `Erro ao comunicar com o servidor: ${error.message}`
+        );
+      }
+    }),
   ];
 
   // Adicionar comando para ver métricas
@@ -75,44 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     })
   );
 
-  disposables.push(
-    vscode.commands.registerCommand("pandora-code-ai.analyzeCode", async () => {
-      try {
-        metricsService.trackCommand("analyzeCode");
-
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) return;
-
-        const analysis = await codeAnalysisService.analyzeCode(editor.document);
-        resultPanel.showCodeAnalysis(analysis);
-      } catch (error) {
-        metricsService.trackError(error as Error);
-        vscode.window.showErrorMessage(
-          "Erro na análise de código: " + (error as Error).message
-        );
-      }
-    })
-  );
-
-  // Adicionar comando para mostrar métricas do DeepSeek
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      "pandora-code-ai.showModelMetrics",
-      async () => {
-        const metrics = await aiService.getDeepSeekService().getMetrics();
-
-        vscode.window.showInformationMessage(
-          `DeepSeek Metrics:\n` +
-            `Status: ${metrics.isReady ? "Connected" : "Disconnected"}\n` +
-            `Total Requests: ${metrics.totalRequests}\n` +
-            `Success Rate: ${(
-              (metrics.successfulRequests / metrics.totalRequests) *
-              100
-            ).toFixed(2)}%`
-        );
-      }
-    )
-  );
+  // Removido o comando "pandora-code-ai.showModelMetrics" que dependia do DeepSeekService
 
   // Registrar comando para abrir o painel
   context.subscriptions.push(
