@@ -33,9 +33,47 @@ Extensão VSCode que utiliza IA para auxiliar programadores iniciantes.
 ## 🛠️ Stack Técnica
 
 - TypeScript/Node.js para a extensão
-- Python/FastAPI para o servidor
-- Microsoft CodeGPT para IA local
+- Python/Flask para o servidor
+- Gemini API para processamento de IA
 - Jest para testes
+- Node-fetch para comunicação HTTP
+
+## 📋 Pré-requisitos
+
+- Node.js 16+
+- Python 3.8+
+- VSCode 1.80+
+- API Key do Gemini
+
+## 🚀 Instalação
+
+1. **Configurar Ambiente Node.js**
+```bash
+npm install
+```
+
+2. **Configurar Ambiente Python**
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+.\venv\Scripts\activate   # Windows
+pip install -r server/requirements.txt
+```
+
+3. **Configurar Variáveis de Ambiente**
+- Copie `.env.example` para `.env`
+- Adicione sua API key do Gemini
+
+4. **Iniciar o Servidor**
+```bash
+.\start-server.bat  # Windows
+./start-server.sh   # Linux/Mac
+```
+
+5. **Compilar a Extensão**
+```bash
+npm run compile
+```
 
 ## 📋 Feedback Necessário
 
