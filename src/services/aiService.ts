@@ -8,6 +8,12 @@ import {
   CodeGeneration,
 } from "../types/AITypes";
 import { ResponseParser } from "../utils/responseParser";
+import {
+  AnalyzeResponse,
+  ExplainResponse,
+  SecurityResponse,
+  GenerateResponse,
+} from "../types/APITypes";
 
 export class AIService {
   private maxRetries = 3;
@@ -29,6 +35,7 @@ export class AIService {
         throw new Error(`Servidor indisponível: ${response.status}`);
       } catch (error) {
         if (i === this.maxRetries - 1) {
+          // Usar vscode.window em vez de window
           vscode.window.showErrorMessage(
             `Falha ao conectar ao servidor após ${this.maxRetries} tentativas. Verifique se o servidor está rodando.`
           );
@@ -48,6 +55,19 @@ export class AIService {
       }
     }
     return true;
+  }
+
+  async checkServerConnection(): Promise<boolean> {
+    try {
+      console.log("Tentando conectar ao servidor:", this.serverUrl);
+      const response = await fetch(`${this.serverUrl}/status`);
+      const ok = response.ok;
+      console.log("Status do servidor:", ok ? "Conectado" : "Erro");
+      return ok;
+    } catch (error) {
+      console.error("Erro ao conectar ao servidor:", error);
+      return false;
+    }
   }
 
   async getSuggestions(
@@ -77,7 +97,7 @@ export class AIService {
         vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
         return [];
       }
-      const data = await response.json();
+      const data = (await response.json()) as AnalyzeResponse;
       return this.parseResponse(data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage(
@@ -107,7 +127,7 @@ export class AIService {
         vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
         return { simpleExplanation: "" };
       }
-      const data = await response.json();
+      const data = (await response.json()) as ExplainResponse;
       return { simpleExplanation: data.explanation, examples: [] };
     } catch (error) {
       vscode.window.showErrorMessage(
@@ -132,8 +152,14 @@ export class AIService {
         vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
         return [];
       }
-      const data = await response.json();
-      return data.vulnerabilities;
+      const data = (await response.json()) as SecurityResponse;
+      // Mapear as vulnerabilidades para o tipo SecurityIssue
+      return data.vulnerabilities.map((vuln) => ({
+        type: vuln.type,
+        description: vuln.description,
+        severity: ResponseParser.assessSeverity(vuln.severity),
+        solution: vuln.solution,
+      }));
     } catch (error) {
       vscode.window.showErrorMessage(
         "Não consegui verificar a segurança. Tente novamente."
@@ -171,7 +197,7 @@ export class AIService {
         vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
         return [];
       }
-      const data = await response.json();
+      const data = (await response.json()) as AnalyzeResponse;
       return this.parseSecurityAnalysis(data.analysis);
     } catch (error) {
       vscode.window.showErrorMessage("Falha na análise de segurança");
@@ -206,8 +232,8 @@ export class AIService {
         vscode.window.showErrorMessage("Erro ao comunicar com o servidor.");
         return { code: "", explanation: "", examples: [] };
       }
-      const data = await response.json();
-      return this.parseCodeGeneration(data);
+      const data = (await response.json()) as GenerateResponse;
+      return this.parseCodeGeneration(data); // Agora passa o objeto GenerateResponse diretamente
     } catch (error) {
       vscode.window.showErrorMessage("Falha na geração de código");
       return { code: "", explanation: "", examples: [] };
@@ -218,7 +244,9 @@ export class AIService {
     return ResponseParser.parseSecurityAnalysis(response);
   }
 
-  private parseCodeGeneration(response: string): CodeGeneration {
+  private parseCodeGeneration(
+    response: string | GenerateResponse
+  ): CodeGeneration {
     return ResponseParser.parseCodeGeneration(response);
   }
 

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import fetch from "node-fetch";
 import { CodeSuggestion } from "../types/AITypes";
+import { CompletionResponse } from "../types/APITypes";
 
 export class DeepSeekCompletionProvider
   implements vscode.CompletionItemProvider
@@ -25,15 +26,13 @@ export class DeepSeekCompletionProvider
         vscode.window.showErrorMessage("Erro do servidor ao obter sugestões.");
         return [];
       }
-      const data = await response.json();
-      // Supondo que o endpoint retorne um array de sugestões em string
-      const suggestions: CodeSuggestion[] = data.suggestions.map(
-        (s: string) => ({ suggestion: s, explanation: "" })
-      );
+      const data = (await response.json()) as CompletionResponse;
+      if (!data.suggestions || !Array.isArray(data.suggestions)) {
+        return [];
+      }
 
-      return suggestions.map((suggestion: CodeSuggestion) => {
-        const item = new vscode.CompletionItem(suggestion.suggestion);
-        item.detail = suggestion.explanation;
+      return data.suggestions.map((suggestion: string) => {
+        const item = new vscode.CompletionItem(suggestion);
         item.kind = vscode.CompletionItemKind.Snippet;
         return item;
       });

@@ -4,6 +4,7 @@ import {
   CodeGeneration,
   CodeAnalysisResult,
 } from "../types/AITypes";
+import { Fix } from "../types/FixTypes";
 
 export class ResultPanel {
   private panel: vscode.WebviewPanel;
@@ -35,6 +36,34 @@ export class ResultPanel {
   public showCodeAnalysis(analysis: CodeAnalysisResult): void {
     const content = this.createAnalysisResultsHtml(analysis);
     this.panel.webview.html = content;
+    this.panel.reveal();
+  }
+
+  public showFixResult(fix: Fix) {
+    if (!this.panel) return;
+
+    const html = `
+        <div class="fix-result">
+            <h3>🔧 Correção Sugerida</h3>
+            <div class="error">
+                <h4>Erro Original:</h4>
+                <pre>${fix.originalError}</pre>
+            </div>
+            <div class="fix">
+                <h4>Código Corrigido:</h4>
+                <pre>${fix.fixedCode}</pre>
+            </div>
+            <div class="explanation">
+                <h4>Explicação:</h4>
+                <p>${fix.explanation}</p>
+            </div>
+            <div class="location">
+                📍 ${fix.file}:${fix.line}
+            </div>
+        </div>
+    `;
+
+    this.panel.webview.html = html;
     this.panel.reveal();
   }
 

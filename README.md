@@ -1,6 +1,27 @@
 # Pandora Code AI
 
-Extensão VSCode que utiliza IA para auxiliar programadores iniciantes.
+Assistente de programação usando IA para ajudar iniciantes, oferecendo análise de código, correção de erros e sugestões em tempo real.
+
+## ✨ Novos Recursos
+
+### 🔍 Caixa de Pandora
+- Análise de erros em tempo real
+- Suporte para erros do terminal
+- Interface intuitiva para correções
+- Sugestões contextuais
+
+### 🎯 Principais Funcionalidades
+- Análise de segurança de código
+- Geração de código assistida
+- Explicação de código para iniciantes
+- Correção automática de problemas
+- Métricas de uso
+
+### 🖥️ Interface Aprimorada
+- Nova barra lateral dedicada
+- Feedback visual em tempo real
+- Organização intuitiva de comandos
+- Atalhos personalizáveis
 
 ## ✨ Destaques do Projeto
 
@@ -271,6 +292,15 @@ curl -X POST http://localhost:11434/api/generate \
    npm run compile
    ```
 
+## 💻 Dicas de Desenvolvimento
+
+### Depuração
+
+- Remover todos os breakpoints: 
+  - Via interface: Debug Panel > botão direito > "Remove All Breakpoints"
+  - Via comando: Ctrl+Shift+P > "Debug: Remove All Breakpoints"
+  - Via atalho: Ctrl+Shift+F9
+
 ## 📬 Como Contribuir
 
 1. Fork o repositório
@@ -284,3 +314,38 @@ curl -X POST http://localhost:11434/api/generate \
 - Use a aba Issues para reportar bugs
 - Discuta ideias nas Discussions
 - PRs são bem-vindos!
+
+## 🚀 Novidades na Instalação
+
+1. **Configuração Simplificada**
+```bash
+npm install
+npm run compile
+```
+
+2. **Iniciar Servidor**
+```bash
+npm run start-python
+```
+
+3. **Atalhos Principais**
+- `Ctrl+Alt+P`: Abrir Caixa de Pandora
+- Clique direito em código: Analisar erro
+- Terminal > Analisar erro: Análise de erros do terminal
+
+## 💡 Como Usar
+
+1. **Análise de Erros**
+   - Selecione o código com erro
+   - Clique direito > "Analisar Erro"
+   - Ou use a Caixa de Pandora diretamente
+
+2. **Erros do Terminal**
+   - Selecione o erro no terminal
+   - Clique direito > "Analisar Erro do Terminal"
+   - Veja sugestões na Caixa de Pandora
+
+3. **Correções Automáticas**
+   - Use o botão "Aplicar Correção"
+   - Ou copie as sugestões para o clipboard
+   - Visualize explicações detalhadas

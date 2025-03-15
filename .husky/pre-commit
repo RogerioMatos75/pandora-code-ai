@@ -7,3 +7,5 @@ npx.cmd --no-install lint-staged
 npx.cmd --no-install lint-staged
 npx.cmd --no-install lint-staged
 npx.cmd --no-install lint-staged
+npx.cmd --no-install lint-staged
+npx.cmd --no-install lint-staged

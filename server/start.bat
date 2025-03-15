@@ -1,26 +1,53 @@
 @echo off
-cd /d %~dp0
-echo Ativando ambiente virtual...
-call ..\venv\Scripts\activate
+echo === Verificacao do Servidor Pandora AI ===
 
-echo Instalando dependencias basicas...
-python -m pip install --upgrade pip wheel setuptools
+REM Verifica Python
+python --version > nul 2>&1
+if errorlevel 1 (
+    echo [ERRO] Python nao encontrado!
+    echo Instale Python 3.8 ou superior
+    pause
+    exit /b 1
+)
 
-echo Instalando FastAPI e Uvicorn...
-python -m pip install fastapi "uvicorn[standard]" --no-cache-dir
+REM Verifica se esta no diretorio correto
+if not exist "app.py" (
+    echo [ERRO] app.py nao encontrado!
+    echo Execute este script da pasta server
+    pause
+    exit /b 1
+)
 
-echo Instalando outras dependencias...
-python -m pip install pydantic aiohttp --no-cache-dir
+REM Verifica ambiente virtual
+if not exist "..\venv\Scripts\activate.bat" (
+    echo Criando ambiente virtual...
+    python -m venv ..\venv
+)
 
-echo Instalando PyTorch...
-python -m pip install torch --index-url https://download.pytorch.org/whl/cpu --no-cache-dir
+REM Ativa ambiente virtual
+call ..\venv\Scripts\activate.bat
 
-echo Instalando Transformers...
-python -m pip install transformers --no-cache-dir
+REM Verifica/instala dependencias
+pip install -r requirements.txt
 
-echo Verificando instalacao...
-python -c "import uvicorn; import fastapi; import torch; print('Dependencias instaladas com sucesso!')"
+REM Verifica arquivo de configuracao
+if not exist "config\settings.json" (
+    if exist "config\settings.example.json" (
+        echo Copiando configuracoes de exemplo...
+        copy "config\settings.example.json" "config\settings.json"
+    ) else (
+        echo [ERRO] Arquivo de configuracao nao encontrado!
+        pause
+        exit /b 1
+    )
+)
 
-echo Iniciando servidor...
-python run_server.py
+echo === Iniciando Servidor ===
+echo * Python: Ativo
+echo * Virtualenv: Ativo
+echo * Dependencias: Instaladas
+echo * Configuracao: OK
+
+python app.py
+
 pause

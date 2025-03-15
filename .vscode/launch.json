@@ -5,9 +5,16 @@
       "name": "Executar Extensão",
       "type": "extensionHost",
       "request": "launch",
-      "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "--disable-extensions"
+      ],
       "outFiles": ["${workspaceFolder}/dist/**/*.js"],
-      "preLaunchTask": "npm: compile"
+      "preLaunchTask": "npm: compile",
+      "env": {
+        "VSCODE_DEBUG_MODE": "true"
+      },
+      "console": "integratedTerminal"
     },
     {
       "name": "Testes de Extensão",

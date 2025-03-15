@@ -1,0 +1,227 @@
+body {
+    padding: 20px;
+    color: var(--vscode-foreground);
+    font-family: var(--vscode-font-family);
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+button {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+button:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+#result {
+    margin-top: 20px;
+    padding: 10px;
+    background: var(--vscode-editor-background);
+    border-radius: 4px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: var(--vscode-editor-background);
+    border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tool-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.tool-button i {
+    font-size: 14px;
+}
+
+.result-panel {
+    padding: 16px;
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.error-card {
+    margin: 8px 0;
+    padding: 12px;
+    background: var(--vscode-editor-background);
+    border-radius: 4px;
+    border-left: 3px solid var(--vscode-errorForeground);
+}
+
+.error-card {
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 4px;
+    border-left: 4px solid;
+    background: var(--vscode-editor-background);
+}
+
+.severity-error {
+    border-left-color: var(--vscode-problemsErrorIcon-foreground);
+}
+
+.severity-warning {
+    border-left-color: var(--vscode-problemsWarningIcon-foreground);
+}
+
+.severity-info {
+    border-left-color: var(--vscode-problemsInfoIcon-foreground);
+}
+
+.error-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.error-message {
+    margin-bottom: 12px;
+    font-family: var(--vscode-editor-font-family);
+}
+
+.error-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--vscode-descriptionForeground);
+    padding: 20px;
+}
+
+.error-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+}
+
+.error-message {
+    margin-bottom: 12px;
+    font-family: var(--vscode-editor-font-family);
+}
+
+.fix-suggestion {
+    background: var(--vscode-textBlockQuote-background);
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 3px;
+}
+
+.fix-suggestion pre {
+    margin: 0;
+    overflow-x: auto;
+}
+
+.explanation {
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 8px;
+}
+
+.loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--vscode-editor-background);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    z-index: 100;
+    border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--vscode-button-background);
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    background: var(--vscode-inputValidation-errorBackground);
+    color: var(--vscode-inputValidation-errorForeground);
+    padding: 8px;
+    margin: 8px 0;
+    border-radius: 3px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.error-card {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.error-checkbox {
+    padding-top: 12px;
+}
+
+.error-content {
+    flex: 1;
+}
+
+.error-actions-toolbar {
+    margin-bottom: 16px;
+    padding: 8px;
+    background: var(--vscode-editor-background);
+    border-radius: 4px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+input[type="checkbox"].error-selector {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--vscode-button-background);
+}

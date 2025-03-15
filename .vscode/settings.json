@@ -1,5 +1,5 @@
 {
-  "workbench.iconTheme": "vs-seti",
+  "workbench.iconTheme": "vscode-icons",
   "window.title": "${activeEditorShort}${separator}PandoraCodeAI",
   "window.titleBarStyle": "custom",
   "window.icon": "../assets/pandora_icon.png"

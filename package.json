@@ -49,8 +49,65 @@
         "title": "Mostrar Painel Pandora AI",
         "category": "Pandora Code AI",
         "icon": "$(robot)"
+      },
+      {
+        "command": "pandora-code-ai.analyzeError",
+        "title": "Analisar Erro no Código",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.sendToPandoraBox",
+        "title": "Enviar para Caixa de Pandora",
+        "category": "Pandora Code AI",
+        "icon": "$(bug)"
+      },
+      {
+        "command": "pandora-box.show",
+        "title": "Mostrar Caixa de Pandora",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "pandora.openPanel",
+        "title": "Abrir Caixa de Pandora",
+        "category": "Pandora Code AI"
+      },
+      {
+        "command": "pandora-code-ai.fixProblems",
+        "title": "Corrigir Problemas Automaticamente",
+        "category": "Pandora Code AI",
+        "icon": {
+          "light": "resources/light/fix.svg",
+          "dark": "resources/dark/fix.svg"
+        }
+      },
+      {
+        "command": "pandora-code-ai.analyzeTerminalError",
+        "title": "Analisar Erro do Terminal",
+        "category": "Pandora Code AI",
+        "icon": "$(terminal)"
       }
     ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "pandora-code-ai.analyzeError",
+          "group": "1_modification",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "pandora-code-ai.sendToPandoraBox",
+          "group": "navigation",
+          "when": "editorHasSelection"
+        }
+      ],
+      "terminal/context": [
+        {
+          "command": "pandora-code-ai.analyzeTerminalError",
+          "group": "navigation",
+          "when": "terminalHasBeenCreated"
+        }
+      ]
+    },
     "configuration": {
       "title": "Pandora Code AI",
       "properties": {
@@ -88,7 +145,7 @@
         {
           "id": "pandora-ai",
           "title": "Pandora Code AI",
-          "icon": "./media/icon.svg"
+          "icon": "$(circuit-board)"
         }
       ]
     },
@@ -97,11 +154,26 @@
         {
           "type": "webview",
           "id": "pandora-ai.mainView",
-          "name": "Pandora AI",
-          "contextualTitle": "Pandora Code AI"
+          "name": "Análise de Código",
+          "contextualTitle": "Pandora Code AI",
+          "icon": "$(search)"
+        },
+        {
+          "id": "pandoraBox",
+          "name": "Caixa de Pandora",
+          "type": "webview",
+          "icon": "$(beaker)"
         }
       ]
-    }
+    },
+    "keybindings": [
+      {
+        "command": "pandora.openPanel",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p",
+        "when": "editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
@@ -116,7 +188,9 @@
     "prepare": "husky install && husky add .husky/pre-commit \"npx.cmd --no-install lint-staged\"",
     "pre-commit": "lint-staged || exit 0",
     "postinstall": "npm run prepare",
-    "setup-security": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-security.ps1"
+    "setup-security": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-security.ps1",
+    "check-virt": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/check-virtualization.ps1",
+    "start-python": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/start-python.ps1"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

@@ -18,10 +18,10 @@ export interface CodeExplanation {
 
 export interface SecurityVulnerability {
   type: string;
-  severity: "critical" | "high" | "medium" | "low";
   description: string;
+  severity: "critical" | "high" | "medium" | "low";
   solution: string;
-  secureExample: string;
+  secureExample?: string;
 }
 
 export interface CodeGeneration {
