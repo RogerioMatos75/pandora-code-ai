@@ -57,8 +57,10 @@ python app.py //para iniciar o servidor
 Em um novo terminal, compilar e iniciar a extensão:
 # Na pasta raiz do projeto
 npm run compile  
+--------------------------------------------
 # Compila a extensão
 .\start-server.bat
+F5 //para iniciar Pandora
 ```
 Depois, pressione F5 no VSCode para iniciar a extensão em modo de desenvolvimento.
 Após iniciar, você poderá ver:
@@ -215,3 +217,45 @@ python run_tests.py
 Deactivate
 bcdedit /set hypervisorlaunchtype off
 ```
+
+_________________________________________________________________
+
+Terminal › Integrated: Commands To Skip Shell
+A set of command IDs whose keybindings will not be sent to the shell but instead always be handled by VS Code. This allows keybindings that would normally be consumed by the shell to act instead the same as when the terminal is not focused, for example Ctrl+P to launch Quick Open.
+
+ 
+
+Many commands are skipped by default. To override a default and pass that command's keybinding to the shell instead, add the command prefixed with the - character. For example add -workbench.action.quickOpen to allow Ctrl+P to reach the shell.
+
+ 
+
+The following list of default skipped commands is truncated when viewed in Settings Editor. To see the full list, open the default settings JSON and search for the first command from the list below.
+
+ 
+
+Default Skipped Commands:
+
+editor.action.accessibilityHelp
+editor.action.toggleTabFocusMode
+notification.acceptPrimaryAction
+notifications.hideList
+notifications.hideToasts
+runCommands [...]
+
+_________________________________________________________________
+
+Install Ollama
+
+https://ollama.ai/download
+
+Download Chat model
+
+ollama pull llama3.1:8b
+
+Download Autocomplete model
+
+ollama pull qwen2.5-coder:1.5b-base
+
+Download Embeddings model
+
+ollama pull nomic-embed-text:latest

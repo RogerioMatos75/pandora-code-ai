@@ -39,7 +39,7 @@ export class PandoraBox {
     );
   }
 
-  private async handleDiagnosticsChange() {
+  private handleDiagnosticsChange() {
     const diagnostics = this.getAllDiagnostics();
     if (diagnostics.length > 0) {
       this._panel.webview.postMessage({
@@ -50,6 +50,7 @@ export class PandoraBox {
           file: d.uri.fsPath,
           line: d.diagnostic.range.start.line + 1,
           code: d.diagnostic.code,
+          selection: true, // Adiciona propriedade para controle de seleção
         })),
       });
     }
@@ -63,11 +64,19 @@ export class PandoraBox {
       uri: vscode.Uri;
       diagnostic: vscode.Diagnostic;
     }> = [];
-    vscode.languages.getDiagnostics().forEach(([uri, diagnostics]) => {
-      diagnostics.forEach((diagnostic) => {
-        allDiagnostics.push({ uri, diagnostic });
-      });
-    });
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+
+    if (workspaceFolders) {
+      for (const folder of workspaceFolders) {
+        vscode.languages.getDiagnostics().forEach(([uri, diagnostics]) => {
+          if (uri.fsPath.startsWith(folder.uri.fsPath)) {
+            diagnostics.forEach((diagnostic) => {
+              allDiagnostics.push({ uri, diagnostic });
+            });
+          }
+        });
+      }
+    }
     return allDiagnostics;
   }
 
@@ -155,21 +164,13 @@ ${analysis.correctedCode || "Nenhuma correção disponível"}
 
   // Método estático para acessar o conteúdo do webview
   public static getWebviewContent(): string {
-    return `
-            <!DOCTYPE html>
+    return `<!DOCTYPE html>
             <html>
             <head>
                 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
-                <script>
-                    (function() {
-                        const vscode = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
-                        if (vscode) {
-                            window.vscode = vscode;
-                        }
-                    })();
-                </script>
                 <style>
                     body { padding: 20px; }
+                    .error-container { margin-top: 20px; }
                     .error-card {
                         background: var(--vscode-editor-background);
                         border: 1px solid var(--vscode-panel-border);
@@ -177,14 +178,22 @@ ${analysis.correctedCode || "Nenhuma correção disponível"}
                         margin-bottom: 15px;
                         border-radius: 4px;
                     }
-                    .summary {
-                        color: var(--vscode-foreground);
-                        margin: 10px 0;
+                    .error-header {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
                     }
-                    .actions {
-                        margin-top: 10px;
+                    .error-selector { margin: 0; }
+                    .error-message { margin-top: 8px; }
+                    .actions-bar {
+                        margin: 20px 0;
                         display: flex;
                         gap: 10px;
+                    }
+                    .empty-state {
+                        color: var(--vscode-descriptionForeground);
+                        text-align: center;
+                        padding: 20px;
                     }
                     button {
                         background: var(--vscode-button-background);
@@ -192,67 +201,97 @@ ${analysis.correctedCode || "Nenhuma correção disponível"}
                         border: none;
                         padding: 8px 12px;
                         cursor: pointer;
+                        border-radius: 2px;
                     }
-                    .primary-button {
-                        background: var(--vscode-button-prominentBackground);
+                    button:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
                     }
                 </style>
             </head>
             <body>
                 <h2>🔍 Caixa de Pandora</h2>
-                <div class="info">
-                    <p>Selecione mensagens de erro no terminal e envie para análise.</p>
+                <div class="actions-bar">
+                    <button onclick="analyzeSelectedErrors()" id="analyze-button" disabled>
+                        Analisar Erros Selecionados
+                    </button>
                 </div>
-                <div id="error-container"></div>
+                <div id="error-container">
+                    <div class="empty-state">
+                        Nenhum erro encontrado. Os erros da aba "Problemas" aparecerão aqui.
+                    </div>
+                </div>
                 <script>
-                    const vscode = acquireVsCodeApi();
-                    
-                    window.addEventListener('message', event => {
-                        const message = event.data;
-                        switch (message.type) {
-                            case 'analyzeError':
-                                showAnalyzing(message.code);
-                                break;
-                            case 'analysisResult':
-                                updateAnalysis(message.result);
-                                break;
+                    (function() {
+                        // Garantir que o VS Code API está disponível
+                        const vscode = (() => {
+                            if (typeof acquireVsCodeApi === 'function') {
+                                return acquireVsCodeApi();
+                            }
+                            return {
+                                postMessage: () => {},
+                                setState: () => {},
+                                getState: () => ({})
+                            };
+                        })();
+
+                        // Setup dos event listeners de forma segura
+                        document.addEventListener('DOMContentLoaded', () => {
+                            window.addEventListener('message', event => {
+                                const message = event.data;
+                                if (message.type === 'diagnosticsUpdate') {
+                                    updateDiagnostics(message.diagnostics);
+                                }
+                            });
+                        });
+
+                        function updateDiagnostics(diagnostics) {
+                            const container = document.getElementById('error-container');
+                            const analyzeButton = document.getElementById('analyze-button');
+                            
+                            if (!diagnostics || diagnostics.length === 0) {
+                                container.innerHTML = '<div class="empty-state">Nenhum erro encontrado</div>';
+                                analyzeButton.disabled = true;
+                                return;
+                            }
+
+                            container.innerHTML = diagnostics.map((d, index) => 
+                                \`<div class="error-card">
+                                    <div class="error-header">
+                                        <input type="checkbox" 
+                                               class="error-selector" 
+                                               id="error-\${index}"
+                                               data-error="\${encodeURIComponent(JSON.stringify(d))}"
+                                               checked>
+                                        <label for="error-\${index}">
+                                            <strong>\${d.file}</strong>:\${d.line}
+                                        </label>
+                                    </div>
+                                    <div class="error-message">\${d.message}</div>
+                                </div>\`
+                            ).join('');
+                            
+                            analyzeButton.disabled = false;
                         }
-                    });
 
-                    function showAnalyzing(code) {
-                        const container = document.getElementById('error-container');
-                        container.innerHTML = \`
-                            <div class="error-card">
-                                <h3>🔄 Analisando Erro</h3>
-                                <pre class="error-code">\${code}</pre>
-                                <p class="analyzing">Processando análise...</p>
-                            </div>
-                        \`;
-                    }
+                        function analyzeSelectedErrors() {
+                            const selectedErrors = Array.from(document.querySelectorAll('.error-selector:checked'))
+                                .map(checkbox => JSON.parse(decodeURIComponent(checkbox.dataset.error)));
+                            
+                            if (selectedErrors.length === 0) return;
 
-                    function updateAnalysis(result) {
-                        const container = document.getElementById('error-container');
-                        container.innerHTML = \`
-                            <div class="error-card">
-                                <h3>📝 Análise Concluída</h3>
-                                <pre class="error-code">\${result.originalError}</pre>
-                                <div class="summary">\${result.summary}</div>
-                                <div class="actions">
-                                    <button class="primary-button" onclick="viewAnalysis()">
-                                        Ver Análise Completa
-                                    </button>
-                                </div>
-                            </div>
-                        \`;
-                    }
+                            vscode.postMessage({
+                                type: 'analyzeSelectedErrors',
+                                errors: selectedErrors
+                            });
+                        }
 
-                    function viewAnalysis() {
-                        vscode.postMessage({ type: 'viewAnalysis' });
-                    }
+                        // Expor funções necessárias globalmente
+                        window.analyzeSelectedErrors = analyzeSelectedErrors;
+                    })();
                 </script>
             </body>
-            </html>
-        `;
+            </html>`;
   }
 
   private setWebviewMessageListener(webview: vscode.Webview) {

@@ -152,28 +152,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(terminalErrorCommand);
 
-    // Registrar view provider
-    const pandoraViewProvider = {
-      resolveWebviewView(webviewView: vscode.WebviewView) {
-        webviewView.webview.html = PandoraPanel.getWebviewContent();
-        webviewView.webview.postMessage({
-          type: "status",
-          status: serverAvailable ? "connected" : "error",
-          message: serverAvailable
-            ? "Servidor conectado"
-            : "Servidor não disponível",
-        });
-      },
-    };
-
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "pandora-ai.mainView",
-        pandoraViewProvider
-      )
-    );
-
-    // Registrar view provider para o panel
+    // Registrar provedores de visualização unificados
+    const pandoraViewProvider = new PandoraPanelProvider(context.extensionUri);
     const pandoraBoxProvider = {
       resolveWebviewView(webviewView: vscode.WebviewView) {
         webviewView.webview.options = {
@@ -183,22 +163,12 @@ export async function activate(context: vscode.ExtensionContext) {
       },
     };
 
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "pandora-box.errorView",
-        pandoraBoxProvider
-      )
-    );
-
-    // Registrar provedores de visualização
+    // Registrar views containers
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
         "pandora-ai.mainView",
-        new PandoraPanelProvider(context.extensionUri)
-      )
-    );
-
-    context.subscriptions.push(
+        pandoraViewProvider
+      ),
       vscode.window.registerWebviewViewProvider(
         "pandoraBox",
         pandoraBoxProvider
